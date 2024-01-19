@@ -1788,3 +1788,4 @@ IBitsPeerCacheAdministration::SetMaximumContentAge=[CanReturnMultipleSuccessValu
 IMoniker::IsEqual=[CanReturnMultipleSuccessValues]
 ISyncMgrSyncItemInfo::IsConnected=[CanReturnMultipleSuccessValues]
 ICodecAPI::IsModifiable=[CanReturnMultipleSuccessValues]
+ID3D12Device::CreateCommandSignature::ppvCommandSignature=[Retval]
