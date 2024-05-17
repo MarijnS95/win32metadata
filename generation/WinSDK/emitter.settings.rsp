@@ -1853,3 +1853,5 @@ WSACreateEvent::return=WSAEVENT
 WSAEnumNetworkEvents::hEventObject=WSAEVENT
 WSAEventSelect::hEventObject=WSAEVENT
 ScriptStringAnalyse::piDx=[-NativeArrayInfo]
+# Move to enums?
+IDXGIOutput4::DuplicateOutput1::Flags=[AssociatedEnum("DXGI_OUTDUPL_FLAG")] # TODO: Currently says "reserved must be zero?"
