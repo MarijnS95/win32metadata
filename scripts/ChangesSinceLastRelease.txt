@@ -895,3 +895,6 @@ Windows.Win32.Networking.WinSock.Apis.SO_DONTLINGER added
 Windows.Win32.Networking.WinSock.Apis.SO_EXCLUSIVEADDRUSE added
 # Fixed #1925.
 Windows.Win32.Security.Cryptography.SslGetCipherSuitePRFHashAlgorithmFn added
+# Upgrade D3D12 Agility SDK to 1.714.0-preview
+Windows.Win32.Graphics.Direct3D12.Apis.CLSID_D3D12DSRDeviceFactory added
+Windows.Win32.Graphics.Direct3D12.ID3D12DSRDeviceFactory added
