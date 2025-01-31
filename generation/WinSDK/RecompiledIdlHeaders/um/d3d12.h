@@ -299,13 +299,6 @@ typedef interface ID3D12WorkGraphProperties ID3D12WorkGraphProperties;
 #endif 	/* __ID3D12WorkGraphProperties_FWD_DEFINED__ */
 
 
-#ifndef __ID3D12WorkGraphProperties1_FWD_DEFINED__
-#define __ID3D12WorkGraphProperties1_FWD_DEFINED__
-typedef interface ID3D12WorkGraphProperties1 ID3D12WorkGraphProperties1;
-
-#endif 	/* __ID3D12WorkGraphProperties1_FWD_DEFINED__ */
-
-
 #ifndef __ID3D12Device5_FWD_DEFINED__
 #define __ID3D12Device5_FWD_DEFINED__
 typedef interface ID3D12Device5 ID3D12Device5;
@@ -1153,7 +1146,7 @@ extern "C"{
 
 #define	D3D12_PIXEL_ADDRESS_RANGE_BIT_COUNT	( 15 )
 
-#define	D3D12_PREVIEW_SDK_VERSION	( 715 )
+#define	D3D12_PREVIEW_SDK_VERSION	( 716 )
 
 #define	D3D12_PRE_SCISSOR_PIXEL_ADDRESS_RANGE_BIT_COUNT	( 16 )
 
@@ -2432,8 +2425,9 @@ enum D3D12_FEATURE
         D3D12_FEATURE_PLACED_RESOURCE_SUPPORT_INFO	= 51,
         D3D12_FEATURE_HARDWARE_COPY	= 52,
         D3D12_FEATURE_D3D12_OPTIONS21	= 53,
-        D3D12_FEATURE_D3D12_OPTIONS22	= 54,
-        D3D12_FEATURE_APPLICATION_SPECIFIC_DRIVER_STATE	= 56
+        D3D12_FEATURE_D3D12_TIGHT_ALIGNMENT	= 54,
+        D3D12_FEATURE_APPLICATION_SPECIFIC_DRIVER_STATE	= 56,
+        D3D12_FEATURE_BYTECODE_BYPASS_HASH_SUPPORTED	= 57
     } 	D3D12_FEATURE;
 
 typedef 
@@ -3107,11 +3101,18 @@ typedef struct D3D12_FEATURE_DATA_D3D12_OPTIONS21
     _Out_  BOOL ExtendedCommandInfoSupported;
     } 	D3D12_FEATURE_DATA_D3D12_OPTIONS21;
 
-typedef struct D3D12_FEATURE_DATA_D3D12_OPTIONS22
+typedef 
+enum D3D12_TIGHT_ALIGNMENT_TIER
+    {
+        D3D12_TIGHT_ALIGNMENT_TIER_NOT_SUPPORTED	= 0,
+        D3D12_TIGHT_ALIGNMENT_TIER_1	= ( D3D12_TIGHT_ALIGNMENT_TIER_NOT_SUPPORTED + 1 ) 
+    } 	D3D12_TIGHT_ALIGNMENT_TIER;
+
+typedef struct D3D12_FEATURE_DATA_TIGHT_ALIGNMENT
     {
     /* [annotation] */ 
-    _Out_  BOOL TightAlignmentSupported;
-    } 	D3D12_FEATURE_DATA_D3D12_OPTIONS22;
+    _Out_  D3D12_TIGHT_ALIGNMENT_TIER SupportTier;
+    } 	D3D12_FEATURE_DATA_TIGHT_ALIGNMENT;
 
 typedef struct D3D12_FEATURE_DATA_PREDICATION
     {
@@ -3130,6 +3131,12 @@ typedef struct D3D12_FEATURE_DATA_APPLICATION_SPECIFIC_DRIVER_STATE
     /* [annotation] */ 
     _Out_  BOOL Supported;
     } 	D3D12_FEATURE_DATA_APPLICATION_SPECIFIC_DRIVER_STATE;
+
+typedef struct D3D12_FEATURE_DATA_BYTECODE_BYPASS_HASH_SUPPORTED
+    {
+    /* [annotation] */ 
+    _Out_  BOOL Supported;
+    } 	D3D12_FEATURE_DATA_BYTECODE_BYPASS_HASH_SUPPORTED;
 
 typedef struct D3D12_RESOURCE_ALLOCATION_INFO
     {
@@ -3255,7 +3262,7 @@ enum D3D12_RESOURCE_FLAGS
         D3D12_RESOURCE_FLAG_VIDEO_DECODE_REFERENCE_ONLY	= 0x40,
         D3D12_RESOURCE_FLAG_VIDEO_ENCODE_REFERENCE_ONLY	= 0x80,
         D3D12_RESOURCE_FLAG_RAYTRACING_ACCELERATION_STRUCTURE	= 0x100,
-        D3D12_RESOURCE_FLAG_USE_TIGHT_ALIGNMENT	= 0x200
+        D3D12_RESOURCE_FLAG_USE_TIGHT_ALIGNMENT	= 0x400
     } 	D3D12_RESOURCE_FLAGS;
 
 DEFINE_ENUM_FLAG_OPERATORS( D3D12_RESOURCE_FLAGS )
@@ -4641,6 +4648,20 @@ typedef HRESULT (WINAPI* PFN_D3D12_CREATE_VERSIONED_ROOT_SIGNATURE_DESERIALIZER)
 HRESULT WINAPI D3D12CreateVersionedRootSignatureDeserializer(
                                      _In_reads_bytes_(SrcDataSizeInBytes) LPCVOID pSrcData,
                                      _In_ SIZE_T SrcDataSizeInBytes,
+                                     _In_ REFIID pRootSignatureDeserializerInterface,
+                                     _Out_ void** ppRootSignatureDeserializer);
+
+typedef HRESULT (WINAPI* PFN_D3D12_CREATE_VERSIONED_ROOT_SIGNATURE_DESERIALIZER_FROM_SUBOBJECT_IN_LIBRARY)(
+                                     _In_reads_bytes_(SrcDataSizeInBytes) LPCVOID pSrcData,
+                                     _In_ SIZE_T SrcDataSizeInBytes,
+                                     _In_ LPCWSTR RootSignatureSubobjectName,
+                                     _In_ REFIID pRootSignatureDeserializerInterface,
+                                     _Out_ void** ppRootSignatureDeserializer);
+
+HRESULT WINAPI D3D12CreateVersionedRootSignatureDeserializerFromSubobjectInLibrary(
+                                     _In_reads_bytes_(SrcDataSizeInBytes) LPCVOID pSrcData,
+                                     _In_ SIZE_T SrcDataSizeInBytes,
+                                     _In_opt_ LPCWSTR RootSignatureSubobjectName,
                                      _In_ REFIID pRootSignatureDeserializerInterface,
                                      _Out_ void** ppRootSignatureDeserializer);
 
@@ -15986,209 +16007,7 @@ void __RPC_STUB ID3D12WorkGraphProperties_GetEntrypointID_Stub(
 #endif 	/* __ID3D12WorkGraphProperties_INTERFACE_DEFINED__ */
 
 
-#ifndef __ID3D12WorkGraphProperties1_INTERFACE_DEFINED__
-#define __ID3D12WorkGraphProperties1_INTERFACE_DEFINED__
-
-/* interface ID3D12WorkGraphProperties1 */
-/* [unique][local][object][uuid] */ 
-
-
-EXTERN_C const IID IID_ID3D12WorkGraphProperties1;
-
-#if defined(__cplusplus) && !defined(CINTERFACE)
-    
-    MIDL_INTERFACE("5490ef66-165f-4b3f-9658-74e5c6d2e1d0")
-    ID3D12WorkGraphProperties1 : public ID3D12WorkGraphProperties
-    {
-    public:
-        virtual void STDMETHODCALLTYPE SetMaximumInputRecords( 
-            UINT WorkGraphIndex,
-            UINT MaxRecords,
-            UINT MaxNodeInputs) = 0;
-        
-    };
-    
-    
-#else 	/* C style interface */
-
-    typedef struct ID3D12WorkGraphProperties1Vtbl
-    {
-        BEGIN_INTERFACE
-        
-        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            ID3D12WorkGraphProperties1 * This,
-            /* [annotation][in] */ 
-            _In_  REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **ppvObject);
-        
-        DECLSPEC_XFGVIRT(IUnknown, AddRef)
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            ID3D12WorkGraphProperties1 * This);
-        
-        DECLSPEC_XFGVIRT(IUnknown, Release)
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            ID3D12WorkGraphProperties1 * This);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetNumWorkGraphs)
-        UINT ( STDMETHODCALLTYPE *GetNumWorkGraphs )( 
-            ID3D12WorkGraphProperties1 * This);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetProgramName)
-        LPCWSTR ( STDMETHODCALLTYPE *GetProgramName )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetWorkGraphIndex)
-        UINT ( STDMETHODCALLTYPE *GetWorkGraphIndex )( 
-            ID3D12WorkGraphProperties1 * This,
-            LPCWSTR pProgramName);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetNumNodes)
-        UINT ( STDMETHODCALLTYPE *GetNumNodes )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetNodeID)
-        D3D12_NODE_ID ( STDMETHODCALLTYPE *GetNodeID )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex,
-            UINT NodeIndex);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetNodeIndex)
-        UINT ( STDMETHODCALLTYPE *GetNodeIndex )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex,
-            D3D12_NODE_ID NodeID);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetNodeLocalRootArgumentsTableIndex)
-        UINT ( STDMETHODCALLTYPE *GetNodeLocalRootArgumentsTableIndex )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex,
-            UINT NodeIndex);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetNumEntrypoints)
-        UINT ( STDMETHODCALLTYPE *GetNumEntrypoints )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetEntrypointID)
-        D3D12_NODE_ID ( STDMETHODCALLTYPE *GetEntrypointID )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex,
-            UINT EntrypointIndex);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetEntrypointIndex)
-        UINT ( STDMETHODCALLTYPE *GetEntrypointIndex )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex,
-            D3D12_NODE_ID NodeID);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetEntrypointRecordSizeInBytes)
-        UINT ( STDMETHODCALLTYPE *GetEntrypointRecordSizeInBytes )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex,
-            UINT EntrypointIndex);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetWorkGraphMemoryRequirements)
-        void ( STDMETHODCALLTYPE *GetWorkGraphMemoryRequirements )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex,
-            /* [annotation] */ 
-            _Out_  D3D12_WORK_GRAPH_MEMORY_REQUIREMENTS *pWorkGraphMemoryRequirements);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties, GetEntrypointRecordAlignmentInBytes)
-        UINT ( STDMETHODCALLTYPE *GetEntrypointRecordAlignmentInBytes )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex,
-            UINT EntrypointIndex);
-        
-        DECLSPEC_XFGVIRT(ID3D12WorkGraphProperties1, SetMaximumInputRecords)
-        void ( STDMETHODCALLTYPE *SetMaximumInputRecords )( 
-            ID3D12WorkGraphProperties1 * This,
-            UINT WorkGraphIndex,
-            UINT MaxRecords,
-            UINT MaxNodeInputs);
-        
-        END_INTERFACE
-    } ID3D12WorkGraphProperties1Vtbl;
-
-    interface ID3D12WorkGraphProperties1
-    {
-        CONST_VTBL struct ID3D12WorkGraphProperties1Vtbl *lpVtbl;
-    };
-
-    
-
-#ifdef COBJMACROS
-
-
-#define ID3D12WorkGraphProperties1_QueryInterface(This,riid,ppvObject)	\
-    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
-
-#define ID3D12WorkGraphProperties1_AddRef(This)	\
-    ( (This)->lpVtbl -> AddRef(This) ) 
-
-#define ID3D12WorkGraphProperties1_Release(This)	\
-    ( (This)->lpVtbl -> Release(This) ) 
-
-
-#define ID3D12WorkGraphProperties1_GetNumWorkGraphs(This)	\
-    ( (This)->lpVtbl -> GetNumWorkGraphs(This) ) 
-
-#define ID3D12WorkGraphProperties1_GetProgramName(This,WorkGraphIndex)	\
-    ( (This)->lpVtbl -> GetProgramName(This,WorkGraphIndex) ) 
-
-#define ID3D12WorkGraphProperties1_GetWorkGraphIndex(This,pProgramName)	\
-    ( (This)->lpVtbl -> GetWorkGraphIndex(This,pProgramName) ) 
-
-#define ID3D12WorkGraphProperties1_GetNumNodes(This,WorkGraphIndex)	\
-    ( (This)->lpVtbl -> GetNumNodes(This,WorkGraphIndex) ) 
-
-#define ID3D12WorkGraphProperties1_GetNodeID(This,WorkGraphIndex,NodeIndex)	\
-    ( (This)->lpVtbl -> GetNodeID(This,WorkGraphIndex,NodeIndex) ) 
-
-#define ID3D12WorkGraphProperties1_GetNodeIndex(This,WorkGraphIndex,NodeID)	\
-    ( (This)->lpVtbl -> GetNodeIndex(This,WorkGraphIndex,NodeID) ) 
-
-#define ID3D12WorkGraphProperties1_GetNodeLocalRootArgumentsTableIndex(This,WorkGraphIndex,NodeIndex)	\
-    ( (This)->lpVtbl -> GetNodeLocalRootArgumentsTableIndex(This,WorkGraphIndex,NodeIndex) ) 
-
-#define ID3D12WorkGraphProperties1_GetNumEntrypoints(This,WorkGraphIndex)	\
-    ( (This)->lpVtbl -> GetNumEntrypoints(This,WorkGraphIndex) ) 
-
-#define ID3D12WorkGraphProperties1_GetEntrypointID(This,WorkGraphIndex,EntrypointIndex)	\
-    ( (This)->lpVtbl -> GetEntrypointID(This,WorkGraphIndex,EntrypointIndex) ) 
-
-#define ID3D12WorkGraphProperties1_GetEntrypointIndex(This,WorkGraphIndex,NodeID)	\
-    ( (This)->lpVtbl -> GetEntrypointIndex(This,WorkGraphIndex,NodeID) ) 
-
-#define ID3D12WorkGraphProperties1_GetEntrypointRecordSizeInBytes(This,WorkGraphIndex,EntrypointIndex)	\
-    ( (This)->lpVtbl -> GetEntrypointRecordSizeInBytes(This,WorkGraphIndex,EntrypointIndex) ) 
-
-#define ID3D12WorkGraphProperties1_GetWorkGraphMemoryRequirements(This,WorkGraphIndex,pWorkGraphMemoryRequirements)	\
-    ( (This)->lpVtbl -> GetWorkGraphMemoryRequirements(This,WorkGraphIndex,pWorkGraphMemoryRequirements) ) 
-
-#define ID3D12WorkGraphProperties1_GetEntrypointRecordAlignmentInBytes(This,WorkGraphIndex,EntrypointIndex)	\
-    ( (This)->lpVtbl -> GetEntrypointRecordAlignmentInBytes(This,WorkGraphIndex,EntrypointIndex) ) 
-
-
-#define ID3D12WorkGraphProperties1_SetMaximumInputRecords(This,WorkGraphIndex,MaxRecords,MaxNodeInputs)	\
-    ( (This)->lpVtbl -> SetMaximumInputRecords(This,WorkGraphIndex,MaxRecords,MaxNodeInputs) ) 
-
-#endif /* COBJMACROS */
-
-
-#endif 	/* C style interface */
-
-
-
-
-#endif 	/* __ID3D12WorkGraphProperties1_INTERFACE_DEFINED__ */
-
-
-/* interface __MIDL_itf_d3d12_0000_0037 */
+/* interface __MIDL_itf_d3d12_0000_0036 */
 /* [local] */ 
 
 typedef 
@@ -16861,8 +16680,8 @@ enum D3D12_HIT_KIND
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0037_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0037_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0036_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0036_v0_0_s_ifspec;
 
 #ifndef __ID3D12Device5_INTERFACE_DEFINED__
 #define __ID3D12Device5_INTERFACE_DEFINED__
@@ -17841,7 +17660,7 @@ EXTERN_C const IID IID_ID3D12Device5;
 #endif 	/* __ID3D12Device5_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0038 */
+/* interface __MIDL_itf_d3d12_0000_0037 */
 /* [local] */ 
 
 typedef 
@@ -17895,7 +17714,8 @@ enum D3D12_AUTO_BREADCRUMB_OP
         D3D12_AUTO_BREADCRUMB_OP_BARRIER	= 45,
         D3D12_AUTO_BREADCRUMB_OP_BEGIN_COMMAND_LIST	= 46,
         D3D12_AUTO_BREADCRUMB_OP_DISPATCHGRAPH	= 47,
-        D3D12_AUTO_BREADCRUMB_OP_SETPROGRAM	= 48
+        D3D12_AUTO_BREADCRUMB_OP_SETPROGRAM	= 48,
+        D3D12_AUTO_BREADCRUMB_OP_PROCESSFRAMES2	= 52
     } 	D3D12_AUTO_BREADCRUMB_OP;
 
 typedef struct D3D12_AUTO_BREADCRUMB_NODE
@@ -18111,8 +17931,8 @@ typedef struct D3D12_VERSIONED_DEVICE_REMOVED_EXTENDED_DATA
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0038_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0038_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0037_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0037_v0_0_s_ifspec;
 
 #ifndef __ID3D12DeviceRemovedExtendedDataSettings_INTERFACE_DEFINED__
 #define __ID3D12DeviceRemovedExtendedDataSettings_INTERFACE_DEFINED__
@@ -18803,7 +18623,7 @@ EXTERN_C const IID IID_ID3D12DeviceRemovedExtendedData2;
 #endif 	/* __ID3D12DeviceRemovedExtendedData2_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0044 */
+/* interface __MIDL_itf_d3d12_0000_0043 */
 /* [local] */ 
 
 typedef 
@@ -18826,8 +18646,8 @@ enum D3D12_MEASUREMENTS_ACTION
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0044_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0044_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0043_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0043_v0_0_s_ifspec;
 
 #ifndef __ID3D12Device6_INTERFACE_DEFINED__
 #define __ID3D12Device6_INTERFACE_DEFINED__
@@ -19766,7 +19586,7 @@ EXTERN_C const IID IID_ID3D12Device6;
 #endif 	/* __ID3D12Device6_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0045 */
+/* interface __MIDL_itf_d3d12_0000_0044 */
 /* [local] */ 
 
 DEFINE_GUID(D3D12_PROTECTED_RESOURCES_SESSION_HARDWARE_PROTECTED,                           0x62B0084E, 0xC70E, 0x4DAA, 0xA1, 0x09, 0x30, 0xFF, 0x8D, 0x5A, 0x04, 0x82); 
@@ -19792,8 +19612,8 @@ typedef struct D3D12_PROTECTED_RESOURCE_SESSION_DESC1
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0045_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0045_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0044_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0044_v0_0_s_ifspec;
 
 #ifndef __ID3D12ProtectedResourceSession1_INTERFACE_DEFINED__
 #define __ID3D12ProtectedResourceSession1_INTERFACE_DEFINED__
@@ -23606,7 +23426,7 @@ EXTERN_C const IID IID_ID3D12GraphicsCommandList3;
 #endif 	/* __ID3D12GraphicsCommandList3_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0052 */
+/* interface __MIDL_itf_d3d12_0000_0051 */
 /* [local] */ 
 
 typedef 
@@ -23721,8 +23541,8 @@ enum D3D12_RENDER_PASS_FLAGS
 DEFINE_ENUM_FLAG_OPERATORS( D3D12_RENDER_PASS_FLAGS )
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0052_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0052_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0051_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0051_v0_0_s_ifspec;
 
 #ifndef __ID3D12MetaCommand_INTERFACE_DEFINED__
 #define __ID3D12MetaCommand_INTERFACE_DEFINED__
@@ -23875,7 +23695,7 @@ EXTERN_C const IID IID_ID3D12MetaCommand;
 #endif 	/* __ID3D12MetaCommand_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0053 */
+/* interface __MIDL_itf_d3d12_0000_0052 */
 /* [local] */ 
 
 typedef struct D3D12_DISPATCH_RAYS_DESC
@@ -23985,8 +23805,8 @@ typedef struct D3D12_DISPATCH_GRAPH_DESC
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0053_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0053_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0052_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0052_v0_0_s_ifspec;
 
 #ifndef __ID3D12GraphicsCommandList4_INTERFACE_DEFINED__
 #define __ID3D12GraphicsCommandList4_INTERFACE_DEFINED__
@@ -25048,7 +24868,7 @@ EXTERN_C const IID IID_ID3D12GraphicsCommandList4;
 #endif 	/* __ID3D12GraphicsCommandList4_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0054 */
+/* interface __MIDL_itf_d3d12_0000_0053 */
 /* [local] */ 
 
 typedef 
@@ -25255,8 +25075,8 @@ typedef struct D3D12_BARRIER_GROUP
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0054_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0054_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0053_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0053_v0_0_s_ifspec;
 
 #ifndef __ID3D12ShaderCacheSession_INTERFACE_DEFINED__
 #define __ID3D12ShaderCacheSession_INTERFACE_DEFINED__
@@ -25464,7 +25284,7 @@ void __RPC_STUB ID3D12ShaderCacheSession_GetDesc_Stub(
 #endif 	/* __ID3D12ShaderCacheSession_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0055 */
+/* interface __MIDL_itf_d3d12_0000_0054 */
 /* [local] */ 
 
 typedef 
@@ -25488,8 +25308,8 @@ enum D3D12_SHADER_CACHE_CONTROL_FLAGS
 DEFINE_ENUM_FLAG_OPERATORS( D3D12_SHADER_CACHE_CONTROL_FLAGS )
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0055_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0055_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0054_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0054_v0_0_s_ifspec;
 
 #ifndef __ID3D12Device9_INTERFACE_DEFINED__
 #define __ID3D12Device9_INTERFACE_DEFINED__
@@ -33235,7 +33055,7 @@ EXTERN_C const IID IID_ID3D12DeviceTools;
 #endif 	/* __ID3D12DeviceTools_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0067 */
+/* interface __MIDL_itf_d3d12_0000_0066 */
 /* [local] */ 
 
 typedef 
@@ -33249,8 +33069,8 @@ enum D3D12_APPLICATION_SPECIFIC_DRIVER_BLOB_STATUS
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0067_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0067_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0066_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0066_v0_0_s_ifspec;
 
 #ifndef __ID3D12DeviceTools1_INTERFACE_DEFINED__
 #define __ID3D12DeviceTools1_INTERFACE_DEFINED__
@@ -33358,7 +33178,7 @@ EXTERN_C const IID IID_ID3D12DeviceTools1;
 #endif 	/* __ID3D12DeviceTools1_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0068 */
+/* interface __MIDL_itf_d3d12_0000_0067 */
 /* [local] */ 
 
 typedef struct D3D12_SUBRESOURCE_DATA
@@ -33476,6 +33296,21 @@ static const UUID D3D12TiledResourceTier4 = { /* c9c4725f-a81a-4f56-8c5b-c51039d
     { 0x8c, 0x5b, 0xc5, 0x10, 0x39, 0xd6, 0x94, 0xfb }
 };
 // --------------------------------------------------------------------------------------------------------------------------------
+// Experimental Feature: D3D12GPUUploadHeapsOnUnsupportedOS
+//
+// Use with D3D12EnableExperimentalFeatures to enable GPU upload heaps support on an unsupported OS, 
+// driver support is still required for this feature.
+//
+// Enabling D3D12GPUUploadHeapsOnUnsupportedOS needs no configuration struct, pass NULL in the pConfigurationStructs array.
+//
+// --------------------------------------------------------------------------------------------------------------------------------
+static const UUID D3D12GPUUploadHeapsOnUnsupportedOS = { /* 45dc51f3-767f-4588-b206-0baa2b16fbae */
+    0x45dc51f3,
+    0x767f,
+    0x4588,
+    { 0xb2, 0x06, 0x0b, 0xaa, 0x2b, 0x16, 0xfb, 0xae }
+};
+// --------------------------------------------------------------------------------------------------------------------------------
 // Experimental Feature: D3D12StateObjectsExperiment
 //
 // Use with D3D12EnableExperimentalFeatures to enable preview features related to state objects.
@@ -33508,8 +33343,8 @@ HRESULT WINAPI D3D12GetInterface( _In_ REFCLSID rclsid, _In_ REFIID riid, _COM_O
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0068_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0068_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0067_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0067_v0_0_s_ifspec;
 
 #ifndef __ID3D12SDKConfiguration_INTERFACE_DEFINED__
 #define __ID3D12SDKConfiguration_INTERFACE_DEFINED__
@@ -33715,7 +33550,7 @@ EXTERN_C const IID IID_ID3D12SDKConfiguration1;
 #endif 	/* __ID3D12SDKConfiguration1_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0070 */
+/* interface __MIDL_itf_d3d12_0000_0069 */
 /* [local] */ 
 
 typedef 
@@ -33730,8 +33565,8 @@ enum D3D12_DEVICE_FACTORY_FLAGS
 DEFINE_ENUM_FLAG_OPERATORS( D3D12_DEVICE_FACTORY_FLAGS )
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0070_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0070_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0069_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0069_v0_0_s_ifspec;
 
 #ifndef __ID3D12DeviceFactory_INTERFACE_DEFINED__
 #define __ID3D12DeviceFactory_INTERFACE_DEFINED__
@@ -33906,7 +33741,7 @@ EXTERN_C const IID IID_ID3D12DeviceFactory;
 #endif 	/* __ID3D12DeviceFactory_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0071 */
+/* interface __MIDL_itf_d3d12_0000_0070 */
 /* [local] */ 
 
 typedef 
@@ -33937,8 +33772,8 @@ typedef struct D3D12_DEVICE_CONFIGURATION_DESC
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0071_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0071_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0070_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0070_v0_0_s_ifspec;
 
 #ifndef __ID3D12DeviceConfiguration_INTERFACE_DEFINED__
 #define __ID3D12DeviceConfiguration_INTERFACE_DEFINED__
@@ -34232,7 +34067,7 @@ EXTERN_C const IID IID_ID3D12DeviceConfiguration1;
 #endif 	/* __ID3D12DeviceConfiguration1_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0073 */
+/* interface __MIDL_itf_d3d12_0000_0072 */
 /* [local] */ 
 
 typedef 
@@ -34272,8 +34107,8 @@ enum D3D12_SHADING_RATE_COMBINER
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0073_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0073_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0072_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0072_v0_0_s_ifspec;
 
 #ifndef __ID3D12GraphicsCommandList5_INTERFACE_DEFINED__
 #define __ID3D12GraphicsCommandList5_INTERFACE_DEFINED__
@@ -35307,7 +35142,7 @@ EXTERN_C const IID IID_ID3D12GraphicsCommandList5;
 #endif 	/* __ID3D12GraphicsCommandList5_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0074 */
+/* interface __MIDL_itf_d3d12_0000_0073 */
 /* [local] */ 
 
 typedef struct D3D12_DISPATCH_MESH_ARGUMENTS
@@ -35319,8 +35154,8 @@ typedef struct D3D12_DISPATCH_MESH_ARGUMENTS
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0074_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0074_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0073_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0073_v0_0_s_ifspec;
 
 #ifndef __ID3D12GraphicsCommandList6_INTERFACE_DEFINED__
 #define __ID3D12GraphicsCommandList6_INTERFACE_DEFINED__
@@ -42076,7 +41911,7 @@ EXTERN_C const IID IID_ID3D12GBVDiagnostics;
 #endif 	/* __ID3D12GBVDiagnostics_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_d3d12_0000_0082 */
+/* interface __MIDL_itf_d3d12_0000_0081 */
 /* [local] */ 
 
 #endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP | WINAPI_PARTITION_GAMES) */
@@ -42117,7 +41952,6 @@ DEFINE_GUID(IID_ID3D12StateObject,0x47016943,0xfca8,0x4594,0x93,0xea,0xaf,0x25,0
 DEFINE_GUID(IID_ID3D12StateObjectProperties,0xde5fa827,0x9bf9,0x4f26,0x89,0xff,0xd7,0xf5,0x6f,0xde,0x38,0x60);
 DEFINE_GUID(IID_ID3D12StateObjectProperties1,0x460caac7,0x1d24,0x446a,0xa1,0x84,0xca,0x67,0xdb,0x49,0x41,0x38);
 DEFINE_GUID(IID_ID3D12WorkGraphProperties,0x065acf71,0xf863,0x4b89,0x82,0xf4,0x02,0xe4,0xd5,0x88,0x67,0x57);
-DEFINE_GUID(IID_ID3D12WorkGraphProperties1,0x5490ef66,0x165f,0x4b3f,0x96,0x58,0x74,0xe5,0xc6,0xd2,0xe1,0xd0);
 DEFINE_GUID(IID_ID3D12Device5,0x8b4f173b,0x2fea,0x4b80,0x8f,0x58,0x43,0x07,0x19,0x1a,0xb9,0x5d);
 DEFINE_GUID(IID_ID3D12DeviceRemovedExtendedDataSettings,0x82BC481C,0x6B9B,0x4030,0xAE,0xDB,0x7E,0xE3,0xD1,0xDF,0x1E,0x63);
 DEFINE_GUID(IID_ID3D12DeviceRemovedExtendedDataSettings1,0xDBD5AE51,0x3317,0x4F0A,0xAD,0xF9,0x1D,0x7C,0xED,0xCA,0xAE,0x0B);
@@ -42165,8 +41999,8 @@ DEFINE_GUID(IID_ID3D12DSRDeviceFactory,0xf343d1a0,0xafe3,0x439f,0xb1,0x3d,0xcd,0
 DEFINE_GUID(IID_ID3D12GBVDiagnostics,0x597985ab,0x9b75,0x4dbb,0xbe,0x23,0x07,0x61,0x19,0x5b,0xeb,0xee);
 
 
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0082_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0082_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0081_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_d3d12_0000_0081_v0_0_s_ifspec;
 
 /* Additional Prototypes for ALL interfaces */
 
