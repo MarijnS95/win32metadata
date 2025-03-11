@@ -2028,3 +2028,5 @@ IDxDiagContainer::EnumChildContainerNames::pwszContainer=[Out][NativeArrayInfo(C
 IDxDiagContainer::EnumPropNames::pwszPropName=[Out][NativeArrayInfo(CountParamIndex = 2)]
 IDxDiagContainer::GetNumberOfProps::pdwCount=[Out]
 IDxDiagContainer::GetProp::pvarProp=[Out]
+Module32Next::lpme=[Out]
+Module32FirstW::lpme=[Out]
